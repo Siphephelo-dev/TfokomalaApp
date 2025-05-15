@@ -35,22 +35,54 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _resetPassword() async {
-    if (_emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your email")),
-      );
-      return;
-    }
-    try {
-      await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password reset email sent")),
-      );
-    } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? "Failed to send reset email")),
-      );
-    }
+    final TextEditingController resetEmailController =
+    TextEditingController(text: _emailController.text.trim());
+
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Reset Password"),
+        content: TextField(
+          controller: resetEmailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            hintText: "Enter your email",
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final email = resetEmailController.text.trim();
+              if (email.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Please enter an email")),
+                );
+                return;
+              }
+              try {
+                await _auth.sendPasswordResetEmail(email: email);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Password reset email sent")),
+                );
+              } on FirebaseAuthException catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content:
+                      Text(e.message ?? "Failed to send reset email")),
+                );
+              }
+            },
+            child: const Text("Send"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

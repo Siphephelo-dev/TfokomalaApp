@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart'; // For the map
 import 'package:provider/provider.dart';
 import '../models/cart_model.dart';
+import 'OrderConfirmationPage.dart'; // Make sure this path is correct
 
 class DeliveryAddressPage extends StatefulWidget {
   const DeliveryAddressPage({super.key});
@@ -12,82 +12,94 @@ class DeliveryAddressPage extends StatefulWidget {
 
 class _DeliveryAddressPageState extends State<DeliveryAddressPage> {
   TextEditingController addressController = TextEditingController();
-  late GoogleMapController mapController;
-  LatLng _pinLocation = LatLng(37.42796133580664, -122.085749655962); // Default location (use user's location ideally)
-
-  // Save the user's location when the user taps on the map
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
-  }
-
-  void _onTap(LatLng location) {
-    setState(() {
-      _pinLocation = location;
-    });
-  }
+  String _deliveryOption = 'pickup'; // Default option is pickup
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Enter Delivery Address'),
+        title: const Text('Delivery or Pickup'),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
-      body: SingleChildScrollView(  // Wrap the entire body in a SingleChildScrollView
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Address input field
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Choose Order Option:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+
+            // Radio buttons for pickup or delivery
+            RadioListTile<String>(
+              title: const Text('Pickup (Collect from store)'),
+              value: 'pickup',
+              groupValue: _deliveryOption,
+              onChanged: (value) {
+                setState(() {
+                  _deliveryOption = value!;
+                });
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('Delivery (Enter your address)'),
+              value: 'delivery',
+              groupValue: _deliveryOption,
+              onChanged: (value) {
+                setState(() {
+                  _deliveryOption = value!;
+                });
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // Show address input only if delivery is selected
+            if (_deliveryOption == 'delivery') ...[
+              const Text('Delivery Address:', style: TextStyle(fontSize: 16)),
+              const SizedBox(height: 8),
               TextField(
                 controller: addressController,
                 decoration: const InputDecoration(
-                  labelText: 'Enter Address',
+                  labelText: 'Enter your delivery address',
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 20),
+            ],
 
-              // Google Map for location selection
-              Container(
-                height: 300,
-                child: GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: _pinLocation,
-                    zoom: 14,
-                  ),
-                  onMapCreated: _onMapCreated,
-                  onTap: _onTap,
-                  markers: {
-                    Marker(
-                      markerId: const MarkerId('deliveryPin'),
-                      position: _pinLocation,
-                    ),
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              ElevatedButton(
+            Center(
+              child: ElevatedButton(
                 onPressed: () {
-                  if (addressController.text.isNotEmpty) {
-                    // Add logic for proceeding to payment with the entered address and location
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Proceeding to payment...")),
-                    );
-                    // Example: You could use Navigator.pushNamed to proceed to the payment page.
-                  } else {
-                    // Show a warning if the address is empty
+                  if (_deliveryOption == 'delivery' && addressController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Please enter a delivery address")),
                     );
+                    return;
                   }
+
+                  // Use entered address or "Pickup"
+                  String finalAddress = _deliveryOption == 'pickup' ? 'Pickup' : addressController.text;
+
+                  // Navigate to confirmation page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OrderConfirmationPage(
+                        address: finalAddress,
+                        totalAmount: Provider.of<CartModel>(context, listen: false).totalPrice,
+                      ),
+                    ),
+                  );
                 },
-                child: const Text('Proceed to Payment'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Proceed to Payment', style: TextStyle(fontSize: 16)),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

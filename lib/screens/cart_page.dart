@@ -83,48 +83,7 @@ class CartPage extends StatelessWidget {
           )
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 3,
-        onDestinationSelected: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushReplacementNamed(context, '/home');
-              break;
-            case 1:
-              Navigator.pushReplacementNamed(context, '/orders');
-              break;
-            case 2:
-              Navigator.pushReplacementNamed(context, '/alerts');
-              break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/cart');
-              break;
-            case 4:
-              Navigator.pushReplacementNamed(context, '/profile');
-              break;
-            case 5:
-              Navigator.pushReplacementNamed(context, '/more');
-              break;
-          }
-        },
-        destinations: [
-          const NavigationDestination(icon: Icon(Icons.home), label: "Home"),
-          const NavigationDestination(icon: Icon(Icons.list), label: "Orders"),
-          const NavigationDestination(icon: Icon(Icons.notifications), label: "Alerts"),
-          NavigationDestination(
-            icon: Consumer<CartModel>(
-              builder: (context, cart, child) => Badge(
-                label: Text('${cart.totalItems}'),
-                isLabelVisible: cart.totalItems > 0,
-                child: const Icon(Icons.shopping_cart),
-              ),
-            ),
-            label: "Cart",
-          ),
-          const NavigationDestination(icon: Icon(Icons.person), label: "Profile"),
-          const NavigationDestination(icon: Icon(Icons.menu), label: "More"),
-        ],
-      ),
+
     );
   }
 }

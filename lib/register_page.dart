@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -10,6 +11,8 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String firstName = '';
   String lastName = '';
@@ -22,22 +25,27 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscureConfirm = true;
   bool isLoading = false;
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
   void _register() async {
     if (_formKey.currentState!.validate()) {
       setState(() => isLoading = true);
       try {
-        await _auth.createUserWithEmailAndPassword(
+        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
-        // Optionally, store name, last name, mobile in Firestore here
+
+        // Save user data to Firestore
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          'firstName': firstName,
+          'lastName': lastName,
+          'mobile': mobile,
+          'email': email,
+        });
 
         Navigator.pushReplacementNamed(context, '/login');
       } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? "Registration failed")),
+          SnackBar(content: Text(e.message ?? 'Registration failed')),
         );
       } finally {
         setState(() => isLoading = false);
@@ -46,7 +54,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   bool _isStrongPassword(String value) {
-    return RegExp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$').hasMatch(value);
+    return RegExp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$').hasMatch(value);
   }
 
   @override
@@ -72,11 +80,38 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 16),
                     _buildTextField(label: "Mobile Number", keyboardType: TextInputType.phone, onChanged: (val) => mobile = val),
                     const SizedBox(height: 16),
-                    _buildTextField(label: "Email", keyboardType: TextInputType.emailAddress, onChanged: (val) => email = val, validator: _validateEmail),
+                    _buildTextField(
+                      label: "Email",
+                      keyboardType: TextInputType.emailAddress,
+                      onChanged: (val) => email = val,
+                      validator: _validateEmail,
+                    ),
                     const SizedBox(height: 16),
-                    _buildPasswordField(label: "Password", isObscured: _obscurePassword, toggleObscure: () => setState(() => _obscurePassword = !_obscurePassword), onChanged: (val) => password = val),
+                    _buildPasswordField(
+                      label: "Password",
+                      isObscured: _obscurePassword,
+                      toggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
+                      onChanged: (val) => password = val,
+                      validator: (val) {
+                        if (val == null || val.isEmpty) return 'Enter a password';
+                        if (!_isStrongPassword(val)) {
+                          return 'Password must be 8+ chars with uppercase, lowercase & number';
+                        }
+                        return null;
+                      },
+                    ),
                     const SizedBox(height: 16),
-                    _buildPasswordField(label: "Confirm Password", isObscured: _obscureConfirm, toggleObscure: () => setState(() => _obscureConfirm = !_obscureConfirm), onChanged: (val) => confirmPassword = val, validator: (val) => val != password ? 'Passwords do not match' : null),
+                    _buildPasswordField(
+                      label: "Confirm Password",
+                      isObscured: _obscureConfirm,
+                      toggleObscure: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                      onChanged: (val) => confirmPassword = val,
+                      validator: (val) {
+                        if (val == null || val.isEmpty) return 'Re-enter your password';
+                        if (val != password) return 'Passwords do not match';
+                        return null;
+                      },
+                    ),
                     const SizedBox(height: 24),
                     isLoading
                         ? const CircularProgressIndicator()
@@ -84,7 +119,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _register,
-                        style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
                         child: const Text("Register", style: TextStyle(fontSize: 18)),
                       ),
                     ),
@@ -135,13 +173,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
       ),
       onChanged: onChanged,
-      validator: validator ??
-              (val) {
-            if (val == null || !_isStrongPassword(val)) {
-              return 'Password must be 8+ chars, incl. uppercase, lowercase, number';
-            }
-            return null;
-          },
+      validator: validator,
     );
   }
 
