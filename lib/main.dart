@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yummy/register_page.dart';
 import 'package:yummy/screens/OrderConfirmationPage.dart';
-import 'package:yummy/screens/PaymentPage.dart';
+
 
 import 'constants.dart';
 import 'home.dart';
@@ -82,7 +82,7 @@ class _YummyState extends State<Yummy> {
           '/profile': (context) => const ProfilePage(),
           '/more': (context) => const MorePage(),
           '/order-confirmation': (context) => OrderConfirmationPage(address: '', totalAmount: 0), // Placeholder
-          '/payment': (context) => const PaymentPage(),
+
         },
       ),
     );

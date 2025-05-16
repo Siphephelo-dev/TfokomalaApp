@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yummy/screens/payfast_webview_page.dart';
 import '../models/cart_model.dart';
 
 class OrderConfirmationPage extends StatelessWidget {
@@ -114,14 +115,21 @@ class OrderConfirmationPage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
+            // Confirm & Pay Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Payment processed successfully!")),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PayfastWebViewPage(
+                        cartItems: cartItems,
+                        address: address,
+                        totalAmount: totalAmount,
+                      ),
+                    ),
                   );
-                  // Add logic to actually process order/payment
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),

@@ -189,13 +189,13 @@ class _HomeState extends State<Home> {
         return _buildHomeContent();
       case 1:
         return const OrdersPage();
+      // case 2:
+      //   return const AlertsPage();
       case 2:
-        return const AlertsPage();
-      case 3:
         return const CartPage();
-      case 4:
+      case 3:
         return const ProfilePage();
-      case 5:
+      case 4:
         return const MorePage();
       default:
         return _buildHomeContent();
@@ -245,7 +245,7 @@ class _HomeState extends State<Home> {
         destinations: [
           const NavigationDestination(icon: Icon(Icons.home), label: "Home"),
           const NavigationDestination(icon: Icon(Icons.list), label: "Orders"),
-          const NavigationDestination(icon: Icon(Icons.notifications), label: "Alerts"),
+          // const NavigationDestination(icon: Icon(Icons.notifications), label: "Alerts"),
           NavigationDestination(
             icon: Consumer<CartModel>(
               builder: (context, cart, child) => Badge(
